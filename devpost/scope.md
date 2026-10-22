@@ -22,7 +22,7 @@ A renter moving out of an apartment, phone in hand, walking room to room on the 
 Feels like a calm, trustworthy tool, not a toy: a clean camera viewfinder, a clear progress list of rooms, and a report that looks like something you could hand to a landlord or a deposit scheme. Plain, reassuring copy ("Line it up", "Matched").
 
 ## Why This Matters to the Learner
-Losing part of a deposit is common and stressful. About 1 in 4 US renters say they have lost a deposit (Rent.com survey, via Fox Business). Apps exist that put photos side by side afterwards; none we found make you shoot the second photo at the same angle.
+Losing part of a deposit is common and stressful. In a 2013 Rent.com survey of 1,000 US renters, 26% said they had lost a security deposit (via Fox Business). Apps exist that put photos side by side afterwards; none we found make you shoot the second photo at the same angle.
 
 ## What "Working" Looks Like
 On a phone browser: add a room, capture two move-in photos, switch to move-out, see the move-in photo ghosted over the live camera, line it up until the frame turns green and the photo is taken, then open the report and see both pairs side by side with timestamps.

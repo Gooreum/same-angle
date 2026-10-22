@@ -9,7 +9,7 @@ Build mode: fast
 
 ## Slices
 
-- [ ] **1. You can add a room and a spot and take a timestamped move-in photo**
+- [x] **1. You can add a room and a spot and take a timestamped move-in photo**
   Becomes usable: Open the app, add a room, add a spot, take a photo with the camera (or upload one), and see it saved with date and time after a reload.
   Why now: Proves the whole path — page, router, camera, storage — that every later slice builds on.
   PRD ref: `prd.md > The Core Journey` (steps 1-2), `prd.md > Rooms and spots`
@@ -71,3 +71,5 @@ Reflection:
 Activity mode:
 
 ## Revisions
+
+- Slice 1 implementation complete: added the app shell, room/spot editing, camera/upload move-in capture, timestamped IndexedDB storage, and session photo retention with save retry. Verified with `node tests/e2e.mjs 1` (Chromium fake camera: capture, reload keeps photo and timestamp, rename, delete-cancel, upload fallback, save retry) and screenshots at 390 px and 1280 px; real-phone check still pending. Tests use Chromium's built-in fake camera for slice 1; generated sample photos and image-based Y4M fixtures remain in slices 4 and 2 respectively.
