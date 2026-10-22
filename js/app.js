@@ -1,6 +1,7 @@
 // Original implementation (MIT). Inline icons adapted from Lucide (ISC); see README.
 import * as store from './store.js';
 import * as camera from './camera.js';
+import * as match from './match.js';
 
 const app = document.querySelector('#app');
 const sheet = document.querySelector('#sheet');
@@ -22,6 +23,8 @@ let cleanup = () => {};
 let routeVersion = 0;
 let toastTimer;
 let pendingSave = false;
+const drafts = new Map();
+const spotWord = count => count === 1 ? 'spot' : 'spots';
 function photoUrl(photoId) {
   const photo = store.current().photos.find(item => item.id === photoId);
   if (!photo) return '';
@@ -104,12 +107,13 @@ function editMenu(kind, item) {
 function homeScreen() {
   const { home, rooms, spots } = store.current();
   const count = spots.filter(spot => spot.inPhotoId).length;
-  app.innerHTML = `${header('Your home', null, 'MOVE-IN')}<section class="page"><div class="page-heading"><p class="eyebrow">YOUR MOVE-IN RECORD</p><h1>${escape(home.name)}</h1><p class="muted">Shoot move-out photos from the exact same angle as move-in.</p></div><div class="section-heading"><h2>Rooms <span class="count">${rooms.length}</span></h2><span class="muted small">${count} ${count === 1 ? 'photo' : 'photos'} saved</span></div>${rooms.length ? `<div class="card-list">${[...rooms].sort((a, b) => a.order - b.order).map(room => {
+  app.innerHTML = `${header('Home', null, home.mode === 'out' ? 'MOVE-OUT' : 'MOVE-IN')}<section class="page"><div class="page-heading"><p class="eyebrow">YOUR ${home.mode === 'out' ? 'MOVE-OUT' : 'MOVE-IN'} RECORD</p><h1>${escape(home.name)}</h1><p class="muted">Shoot move-out photos from the exact same angle as move-in.</p></div><div class="mode-switch" role="group" aria-label="Capture mode">${['in', 'out'].map(mode => `<button class="${home.mode === mode ? 'selected' : ''}" data-action="mode" data-mode="${mode}" aria-pressed="${home.mode === mode}">Move-${mode}</button>`).join('')}</div><div class="section-heading"><h2>Rooms <span class="count">${rooms.length}</span></h2><span class="muted small">${count} ${count === 1 ? 'photo' : 'photos'} saved</span></div>${rooms.length ? `<div class="card-list">${[...rooms].sort((a, b) => a.order - b.order).map(room => {
     const roomSpots = spots.filter(spot => spot.roomId === room.id);
-    const saved = roomSpots.filter(spot => spot.inPhotoId).length;
+    const saved = roomSpots.filter(spot => home.mode === 'out' ? spot.outPhotoId : spot.inPhotoId).length;
     const thumb = roomSpots.find(spot => spot.inPhotoId);
-    return `<article class="room-card"><a class="room-link" href="#/room/${room.id}">${thumb ? `<img class="room-thumb" src="${photoUrl(thumb.inPhotoId)}" alt="Move-in view of ${escape(room.name)}">` : `<span class="room-thumb placeholder">${icon('home')}</span>`}<div><h3>${escape(room.name)}</h3><p class="muted small">${saved} of ${roomSpots.length} spots photographed</p></div>${icon('arrow')}</a><button class="icon-button" data-action="room-menu" data-id="${room.id}" aria-label="Options for ${escape(room.name)}">${icon('more')}</button></article>`;
-  }).join('')}</div>` : `<div class="empty-state"><span class="empty-icon">${icon('home')}</span><h2>A clear record starts here.</h2><p>Add a room, then photograph the spots you want to remember.</p><div class="empty-example"><span>01</span><div><strong>Room by room.</strong><p>Walls, floors, fixtures — one spot at a time.</p></div></div></div>`}<button class="primary full" data-action="add-room">${icon('plus')} Add a room</button><aside class="note"><strong>A little care now. A clearer record later.</strong><p>Capture the details while the room is empty. Every photo keeps its date and time.</p></aside>${privacy()}</section>`;
+    return `<article class="room-card"><a class="room-link" href="#/room/${room.id}">${thumb ? `<img class="room-thumb" src="${photoUrl(thumb.inPhotoId)}" alt="Move-in view of ${escape(room.name)}">` : `<span class="room-thumb placeholder">${icon('home')}</span>`}<div><h3>${escape(room.name)}</h3><p class="muted small">${saved} of ${roomSpots.length} ${spotWord(roomSpots.length)} ${home.mode === 'out' ? 'retaken' : 'photographed'}</p></div>${icon('arrow')}</a><button class="icon-button" data-action="room-menu" data-id="${room.id}" aria-label="Options for ${escape(room.name)}">${icon('more')}</button></article>`;
+  }).join('')}</div>` : `<div class="empty-state"><span class="empty-icon">${icon('home')}</span><h2>A clear record starts here.</h2><p>Add a room, then photograph the spots you want to remember.</p><div class="empty-example"><span>01</span><div><strong>Move-in</strong><p>Photograph each spot.</p></div></div><div class="empty-example"><span>02</span><div><strong>Move-out</strong><p>Line up the ghost.</p></div></div><div class="empty-example"><span>03</span><div><strong>Report</strong><p>Save before/after as PDF.</p></div></div></div>`}<button class="primary full" data-action="add-room">${icon('plus')} Add a room</button><aside class="note"><strong>A little care now. A clearer record later.</strong><p>Capture the details while the room is empty. Every photo keeps its date and time.</p></aside>${privacy()}</section>`;
+  bind('mode', async event => { home.mode = event.currentTarget.dataset.mode; await persist(); await render(); });
   bind('add-room', () => promptSheet('Add a room', 'Room name', '', 'Add room', async name => {
     const room = { id: store.id(), homeId: home.id, name, order: rooms.length };
     rooms.push(room); await persist(); go(`#/room/${room.id}`);
@@ -117,8 +121,9 @@ function homeScreen() {
   bind('room-menu', event => editMenu('room', rooms.find(room => room.id === event.currentTarget.dataset.id)));
 }
 function roomScreen(room) {
+  const out = store.current().home.mode === 'out';
   const spots = store.current().spots.filter(spot => spot.roomId === room.id).sort((a, b) => a.order - b.order);
-  app.innerHTML = `${header('Room', '#/', 'MOVE-IN')}<section class="page"><div class="page-heading"><p class="eyebrow">MOVE-IN RECORD</p><h1>${escape(room.name)}</h1><p class="muted">${spots.filter(spot => spot.inPhotoId).length} of ${spots.length} spots photographed</p></div>${spots.length ? `<div class="card-list">${spots.map(spot => `<article class="spot-card">${spot.inPhotoId ? `<img class="spot-photo" src="${photoUrl(spot.inPhotoId)}" alt="Move-in: ${escape(spot.label)}">` : `<a href="#/capture/${spot.id}/in" class="photo-placeholder">${icon('camera')}<span>Take a move-in photo</span></a>`}<div class="spot-details"><div><h2>${escape(spot.label)}</h2>${spot.inAt ? `<p class="photo-caption">Move-in photo</p><time datetime="${spot.inAt}">${date(spot.inAt)}</time>` : '<p class="muted small">No move-in photo yet</p>'}</div><button class="icon-button" data-action="spot-menu" data-id="${spot.id}" aria-label="Options for ${escape(spot.label)}">${icon('more')}</button></div>${spot.inPhotoId ? `<a class="retake" href="#/capture/${spot.id}/in">Retake move-in photo ${icon('arrow')}</a>` : ''}</article>`).join('')}</div>` : `<div class="empty-state"><span class="empty-icon">${icon('camera')}</span><h2>What needs a record?</h2><p>Start with a wall, a floor corner, or a fixture. Add one spot for each view.</p></div>`}<button class="primary full" data-action="add-spot">${icon('plus')} Add spot</button>${privacy()}</section>`;
+  app.innerHTML = `${header('Room', '#/', out ? 'MOVE-OUT' : 'MOVE-IN')}<section class="page"><div class="page-heading"><p class="eyebrow">${out ? 'MOVE-OUT' : 'MOVE-IN'} RECORD</p><h1>${escape(room.name)}</h1><p class="muted">${spots.filter(spot => out ? spot.outPhotoId : spot.inPhotoId).length} of ${spots.length} ${spotWord(spots.length)} ${out ? 'retaken' : 'photographed'}</p></div>${spots.length ? `<div class="card-list">${spots.map(spot => `<article class="spot-card">${spot.inPhotoId ? `<img class="spot-photo" src="${photoUrl(spot.inPhotoId)}" alt="Move-in: ${escape(spot.label)}">` : `<a href="#/capture/${spot.id}/in" class="photo-placeholder">${icon('camera')}<span>Take a move-in photo</span></a>`}<div class="spot-details"><div><h2>${escape(spot.label)}</h2>${spot.inAt ? `<p class="photo-caption">Move-in photo</p><time datetime="${spot.inAt}">${date(spot.inAt)}</time>` : '<p class="muted small">No move-in photo yet</p>'}</div><button class="icon-button" data-action="spot-menu" data-id="${spot.id}" aria-label="Options for ${escape(spot.label)}">${icon('more')}</button></div>${out ? `${spot.outPhotoId ? `<img class="spot-photo" src="${photoUrl(spot.outPhotoId)}" alt="Move-out: ${escape(spot.label)}"><p class="saved-after"><time datetime="${spot.outAt}">${date(spot.outAt)}</time> · ${spot.outScore ?? 0}% match · ${spot.outAuto ? 'Auto-matched' : 'Manual'}</p>` : '<p class="saved-after muted">Not retaken yet</p>'}<a class="retake" href="#/capture/${spot.id}/out">Retake ${icon('arrow')}</a>${spot.outPhotoId ? `<a class="retake" href="#/pair/${spot.id}">Review pair ${icon('arrow')}</a>` : ''}` : spot.inPhotoId ? `<a class="retake" href="#/capture/${spot.id}/in">Retake move-in photo ${icon('arrow')}</a>` : ''}</article>`).join('')}</div>` : `<div class="empty-state"><span class="empty-icon">${icon('camera')}</span><h2>What needs a record?</h2><p>Start with a wall, a floor corner, or a fixture. Add one spot for each view.</p></div>`}${out ? '' : `<button class="primary full" data-action="add-spot">${icon('plus')} Add spot</button>`}${privacy()}</section>`;
   bind('add-spot', async () => {
     const spot = { id: store.id(), roomId: room.id, label: `Spot ${spots.length + 1}`, order: spots.length, inPhotoId: null, inAt: null, outPhotoId: null, outAt: null, outScore: null, outAuto: false };
     store.current().spots.push(spot); await persist(); go(`#/capture/${spot.id}/in`);
@@ -187,6 +192,102 @@ async function captureScreen(spot, version) {
     status.innerHTML = `<span class="status-icon">${icon('camera')}</span><strong>Camera unavailable</strong><p>Allow camera access in your browser, or upload a photo below.</p>`;
   }
 }
+async function outScreen(spot, version) {
+  const room = store.current().rooms.find(item => item.id === spot.roomId);
+  const before = photoUrl(spot.inPhotoId);
+  app.innerHTML = `<section class="camera-screen">${header(room.name, `#/room/${room.id}`, 'MOVE-OUT')}<div class="camera-heading"><h1>${escape(spot.label)}</h1><p>${before ? 'Line up the live view with your move-in photo.' : 'No move-in photo for this spot. Take a normal photo.'}</p></div><div class="viewfinder"><video autoplay muted playsinline aria-label="Live camera preview"></video>${before ? `<img class="ghost-photo" src="${before}" alt="Move-in alignment guide">` : ''}<div class="viewfinder-corners" aria-hidden="true"></div><div class="camera-status" role="status"><strong>Opening camera…</strong><p>Your browser may ask for permission.</p></div></div><div class="match-controls">${before ? `<div class="match-heading"><strong id="match-label">Line it up</strong><output id="match-score" data-score="0">0% match</output></div><meter min="0" max="100" value="0" aria-label="Match score"></meter><p class="match-hint">Too dark or too different — use the manual shutter</p><div class="ghost-settings"><label for="ghost-opacity">Ghost opacity <span id="opacity-value">50%</span></label><button class="ghost-toggle" type="button" aria-pressed="false">Hide ghost</button></div><input type="range" id="ghost-opacity" min="0" max="100" value="50">` : ''}</div><div class="camera-controls"><p class="capture-hint">${before ? 'Hold steady. Capture automatically when matched.' : 'Date and time are saved with your photo.'}</p><button class="shutter" data-action="shutter" aria-label="Take photo" disabled><span></span></button><label class="upload-button" for="upload-photo">Upload a photo</label><input class="visually-hidden" type="file" id="upload-photo" accept="image/*"><p class="camera-private">Photos stay on this phone.</p></div></section>`;
+  const video = app.querySelector('video'), ghost = app.querySelector('.ghost-photo');
+  const shutter = app.querySelector('.shutter'), status = app.querySelector('.camera-status');
+  let disposed = false, busy = false, currentScore = 0, stopMatch = () => {}, autoTimer;
+  cleanup = () => { disposed = true; clearTimeout(autoTimer); stopMatch(); camera.stop(video); };
+  function update(value) {
+    currentScore = value;
+    if (!ghost) return;
+    app.querySelector('#match-score').textContent = `${value}% match`;
+    app.querySelector('#match-score').dataset.score = value;
+    app.querySelector('meter').value = value;
+    app.querySelector('.match-hint').textContent = value >= match.THRESHOLD ? 'Hold steady to match this view.' : 'Too dark or too different — use the manual shutter';
+  }
+  async function finish(photo, auto, value) {
+    if (disposed || version !== routeVersion) return;
+    cleanup();
+    drafts.set(spot.id, { photo, at: new Date().toISOString(), score: value, auto });
+    go(`#/pair/${spot.id}`);
+  }
+  async function shoot(auto = false) {
+    if (busy || disposed) return;
+    busy = true; stopMatch(); clearTimeout(autoTimer);
+    try { await finish(await camera.capture(video), auto, currentScore); }
+    catch { notify('Could not take a photo. Try again or upload one.'); busy = false; startMatch(); }
+  }
+  function startMatch() {
+    if (!ghost || disposed) return;
+    stopMatch = match.watch(video, ghost, update, () => {
+      if (disposed || busy) return;
+      app.querySelector('.viewfinder').classList.add('matched');
+      app.querySelector('#match-label').textContent = 'Matched';
+      try { navigator.vibrate?.(80); } catch { /* Vibration is optional. */ }
+      autoTimer = setTimeout(() => shoot(true), 200);
+    });
+  }
+  bind('shutter', () => shoot(false));
+  if (ghost) {
+    const slider = app.querySelector('#ghost-opacity'), toggle = app.querySelector('.ghost-toggle');
+    slider.oninput = () => { ghost.style.opacity = slider.value / 100; app.querySelector('#opacity-value').textContent = `${slider.value}%`; };
+    toggle.onclick = () => { ghost.hidden = !ghost.hidden; toggle.textContent = ghost.hidden ? 'Show ghost' : 'Hide ghost'; toggle.setAttribute('aria-pressed', String(ghost.hidden)); };
+  }
+  app.querySelector('#upload-photo').onchange = async event => {
+    if (busy || !event.target.files[0]) return;
+    busy = true; stopMatch(); clearTimeout(autoTimer);
+    try {
+      const photo = await camera.upload(event.target.files[0]);
+      let value = 0;
+      if (ghost) {
+        await ghost.decode();
+        const image = new Image(), url = URL.createObjectURL(photo.blob);
+        try { image.src = url; await image.decode(); value = match.score(image, ghost); }
+        finally { URL.revokeObjectURL(url); }
+      }
+      await finish(photo, false, value);
+    } catch { busy = false; notify('Could not open that photo. Try a JPEG or PNG.'); startMatch(); }
+  };
+  try {
+    await camera.start(video);
+    if (disposed || version !== routeVersion) { camera.stop(video); return; }
+    status.hidden = true; shutter.disabled = false;
+    if (ghost) { await ghost.decode(); if (!disposed) startMatch(); }
+  } catch {
+    if (disposed) return;
+    status.innerHTML = '<strong>Camera unavailable</strong><p>Allow camera access in your browser, or upload a photo below.</p>';
+  }
+}
+function pairScreen(spot) {
+  const draft = drafts.get(spot.id);
+  if (!draft && !spot.outPhotoId) { go(`#/room/${spot.roomId}`); return; }
+  const before = photoUrl(spot.inPhotoId);
+  let after = photoUrl(spot.outPhotoId);
+  if (draft) { after = URL.createObjectURL(draft.photo.blob); urls.push(after); }
+  const at = draft?.at ?? spot.outAt, value = draft?.score ?? spot.outScore ?? 0, auto = draft?.auto ?? spot.outAuto;
+  app.innerHTML = `${header('Pair review', `#/room/${spot.roomId}`, 'MOVE-OUT')}<section class="page"><div class="page-heading"><p class="eyebrow">${escape(spot.label)}</p><h1>Review your pair</h1><p class="muted">Check that both photos show the same spot.</p></div><div class="pair-photos"><figure><figcaption>Before</figcaption>${before ? `<img src="${before}" alt="Before: ${escape(spot.label)}"><time datetime="${spot.inAt}">${date(spot.inAt)}</time>` : '<p class="muted">No move-in photo</p>'}</figure><figure><figcaption>After</figcaption><img src="${after}" alt="After: ${escape(spot.label)}"><time datetime="${at}">${date(at)}</time></figure></div><p class="pair-result ${auto ? 'auto' : ''}">${value}% match · ${auto ? 'Auto-matched' : 'Manual'}</p><button class="primary full" data-action="keep-pair">Keep pair</button><button class="secondary full" data-action="retake-pair">Retake photo</button>${privacy()}</section>`;
+  let record;
+  bind('keep-pair', async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    if (draft) {
+      if (!record) {
+        record = { id: store.id(), ...draft.photo };
+        store.current().photos = store.current().photos.filter(item => item.id !== spot.outPhotoId);
+        store.current().photos.push(record);
+      }
+      Object.assign(spot, { outPhotoId: record.id, outAt: at, outScore: value, outAuto: auto });
+      if (!await persist()) { button.disabled = false; button.textContent = 'Retry saving pair'; return; }
+      drafts.delete(spot.id);
+    }
+    go(`#/room/${spot.roomId}`); notify('Move-out photo saved');
+  });
+  bind('retake-pair', () => { drafts.delete(spot.id); go(`#/capture/${spot.id}/out`); });
+}
+
 async function render() {
   const version = ++routeVersion;
   cleanup(); cleanup = () => {};
@@ -199,6 +300,8 @@ async function render() {
   const spot = store.current().spots.find(item => item.id === parts[1]);
   if (parts[0] === 'room' && room) roomScreen(room);
   else if (parts[0] === 'capture' && spot && parts[2] === 'in') await captureScreen(spot, version);
+  else if (parts[0] === 'capture' && spot && parts[2] === 'out') await outScreen(spot, version);
+  else if (parts[0] === 'pair' && spot) pairScreen(spot);
   else homeScreen();
   app.focus({ preventScroll: true });
   window.scrollTo(0, 0);

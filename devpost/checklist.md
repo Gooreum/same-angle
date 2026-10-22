@@ -19,7 +19,7 @@ Build mode: fast
   Learner check: Open on a phone, add "Living room", take one photo, reload, and see it still there.
   Commit: `Add rooms, spots and timestamped move-in capture`
 
-- [ ] **2. The move-in photo ghosts over the camera and auto-captures when lined up**
+- [x] **2. The move-in photo ghosts over the camera and auto-captures when lined up**
   Becomes usable: In move-out mode, opening a spot shows the move-in photo over the live camera with an opacity slider and match meter; lining up turns the frame green and takes the photo once.
   Why now: This is the kernel; it must work early.
   PRD ref: `prd.md > Ghost capture (the kernel)`, `prd.md > The Core Journey` (steps 3-6)
@@ -73,3 +73,5 @@ Activity mode:
 ## Revisions
 
 - Slice 1 implementation complete: added the app shell, room/spot editing, camera/upload move-in capture, timestamped IndexedDB storage, and session photo retention with save retry. Verified with `node tests/e2e.mjs 1` (Chromium fake camera: capture, reload keeps photo and timestamp, rename, delete-cancel, upload fallback, save retry) and screenshots at 390 px and 1280 px; real-phone check still pending. Tests use Chromium's built-in fake camera for slice 1; generated sample photos and image-based Y4M fixtures remain in slices 4 and 2 respectively.
+
+- Slice 2 implementation complete: added mode switching, adjustable ghost and live-only view, 64×48 gradient correlation at 8 Hz, threshold 70 held for 500 ms, one-shot automatic capture with green frame and optional vibration, manual capture, and keep/retake pair review. Fixed singular spot counts, the empty-home three-step explanation, and the duplicate home title. Generated the three sample JPEGs early for deterministic image-based fixtures; sample loading remains in slice 4. Added same/10%-shift/other fake-camera tests and screenshot cases. Verified with `node tests/e2e.mjs 2` (passed). Measured scores (same / 10% shift / other): 100 / 32 / 0, so threshold 70 separates lined-up from off; finer shifts and real-phone threshold tuning still to check.
