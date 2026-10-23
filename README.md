@@ -6,7 +6,7 @@ Demo: https://gooreum.github.io/same-angle/
 
 ## The problem
 
-A 2013 Rent.com survey found 26% of renters lost a security deposit. [Source: Fox Business](https://www.foxbusiness.com/features/how-renters-can-make-sure-to-get-their-deposit-back).
+In a 2013 Rent.com survey of 1,000 US renters, 26% said they had lost a security deposit. [Source: Fox Business](https://www.foxbusiness.com/features/how-renters-can-make-sure-to-get-their-deposit-back).
 
 When a renter and landlord disagree about a mark on a wall, photos from different angles can make it hard to compare the same spot.
 

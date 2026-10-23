@@ -126,7 +126,7 @@ video { width: 100%; height: 100%; object-fit: contain; display: block; }
 .capture-hint { font-size: var(--text-xs); margin-bottom: var(--s5); }
 .shutter { width: 80px; height: 80px; min-height: 80px; padding: var(--s1); border: 2px solid var(--surface); border-radius: 50%; background: transparent; }
 .shutter span { display: block; height: 100%; width: 100%; border-radius: 50%; background: var(--surface); }
-.upload-button { display: flex; align-items: center; justify-content: center; min-height: var(--s12); margin: var(--s4) 0 0; text-decoration: underline; text-underline-offset: var(--s1); }
+.upload-button { width: 100%; background: transparent; color: inherit; display: flex; align-items: center; justify-content: center; min-height: var(--s12); margin: var(--s4) 0 0; text-decoration: underline; text-underline-offset: var(--s1); }
 .camera-private { font-size: var(--text-xs); margin-top: var(--s2); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .upload-button:has(+ input:focus-visible) { outline: 3px solid var(--surface); outline-offset: var(--s1); }
@@ -185,3 +185,24 @@ input[type="range"] { padding: 0; border: 0; accent-color: var(--surface); backg
 .report-result { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--line); font-size: var(--text-xs); }
 .report-empty { margin-bottom: var(--s6); font-size: var(--text-sm); }
 .report-footer { margin-top: var(--s8); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: var(--text-xs); color: var(--muted); }
+
+/* Final review: keep the sample action in reach on the empty home. */
+.home-empty { padding-top: var(--s6); }
+.home-empty .page-heading, .home-empty .mode-switch { margin-bottom: var(--s4); }
+.home-empty .empty-state { padding: var(--s4); margin-bottom: var(--s2); }
+.home-empty .empty-icon { display: none; }
+.home-empty .empty-state > p { margin-top: var(--s2); }
+.empty-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
+.empty-steps .empty-example { display: block; margin-top: var(--s4); padding-top: var(--s3); }
+.empty-steps .empty-example > span { display: block; margin-bottom: var(--s1); }
+
+/* Camera failure is a photo-upload state, with no inactive camera controls. */
+.camera-unavailable video, .camera-unavailable .viewfinder-corners,
+.camera-unavailable .match-controls, .camera-unavailable .shutter,
+.camera-unavailable .capture-hint { display: none; }
+.camera-unavailable .viewfinder:not(:has(.ghost-photo)) { display: none; }
+.camera-unavailable .ghost-photo { opacity: 1; }
+.camera-unavailable .camera-status { position: static; padding: var(--s6); }
+.camera-unavailable .camera-controls { margin-top: 0; padding-top: 0; }
+.camera-unavailable .upload-button { background: var(--surface); color: var(--ink); text-decoration: none; }
+.camera-unavailable .upload-button:focus-visible { outline-color: var(--surface); }

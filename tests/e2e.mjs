@@ -237,6 +237,7 @@ export async function slice4() {
     await page.getByRole('button', { name: 'Move-out', exact: true }).click();
     await page.goto(`${env.url}/#/capture/${state.spots[0].id}/out`);
     await page.getByText('Camera unavailable', { exact: true }).waitFor();
+    await page.getByText('Choose a photo to record this spot.', { exact: true }).waitFor();
     await page.locator('#upload-photo').setInputFiles(resolve(root, 'img/sample/wall-window.jpg'));
     await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
     assert.match(await page.locator('.pair-result').innerText(), /Manual/);
@@ -284,8 +285,8 @@ export async function slice4() {
     missingSpot.inPhotoId = null; missingSpot.inAt = null;
     await restore(page, missing);
     await page.goto(`${env.url}/#/capture/${missingSpot.id}/out`);
-    await page.getByText('No move-in photo for this spot. Take a normal photo.', { exact: true }).waitFor();
     await page.getByText('Camera unavailable', { exact: true }).waitFor();
+    await page.getByText('No move-in photo for this spot. Choose a photo to record it.', { exact: true }).waitFor();
     assert.equal(await page.locator('.ghost-photo, meter, #ghost-opacity').count(), 0);
     await page.locator('#upload-photo').setInputFiles(resolve(root, 'img/sample/wall-window.jpg'));
     await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();

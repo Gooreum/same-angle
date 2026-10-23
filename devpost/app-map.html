@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same Angle — App map</title>
+<style>
+:root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #232925; background: #f6f5f1; line-height: 1.6; }
+* { box-sizing: border-box; }
+body { max-width: 880px; margin: auto; padding: 32px 20px 64px; }
+h1 { font-size: 36px; line-height: 1.15; letter-spacing: -.03em; }
+h2 { margin-top: 32px; font-size: 24px; line-height: 1.3; }
+h3 { font-size: 18px; }
+p, li { max-width: 72ch; }
+li + li { margin-top: 12px; }
+a { color: #254f74; text-underline-offset: 3px; overflow-wrap: anywhere; }
+a:focus-visible { outline: 3px solid #646b65; outline-offset: 4px; }
+code, pre { font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; padding: 16px; background: #fff; border: 1px solid #d6d9d2; border-radius: 8px; }
+.card { background: #fff; border: 1px solid #d6d9d2; border-radius: 12px; padding: 20px; margin-top: 16px; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; font-weight: 600; }
+.flow { display: block; width: 100%; max-width: 390px; height: auto; margin: 16px auto; }
+.flow text { fill: #232925; font-size: 14px; }
+.flow .caption { font-size: 12px; }
+.flow rect { fill: #f6f5f1; stroke: #646b65; }
+.flow path { fill: none; stroke: #646b65; stroke-width: 2; }
+footer { margin-top: 32px; border-top: 1px solid #d6d9d2; padding-top: 16px; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+<p class="eyebrow">SAME ANGLE / CODE REFERENCE</p>
+<h1>From a ghost photo to a saved pair</h1>
+<p>Same Angle helps a renter photograph the same spot at move-in and move-out, then print a dated before/after report. This map follows the automatic move-out capture through the finished source.</p>
+</header>
+<main>
+<section aria-labelledby="pieces">
+<h2 id="pieces">The main pieces</h2>
+<p><a href="../index.html">index.html</a> opens the app. <a href="../js/app.js">js/app.js</a> chooses the screen and connects its buttons. <a href="../js/camera.js">js/camera.js</a> opens the camera and makes JPEG photos. <a href="../js/match.js">js/match.js</a> compares the live view with the move-in photo. <a href="../js/store.js">js/store.js</a> keeps records and photo blobs in IndexedDB on this phone. <a href="../js/report.js">js/report.js</a> and <a href="../css/print.css">css/print.css</a> turn saved pairs into a printable report.</p>
+<p>There are no external runtime services. Camera access needs HTTPS or localhost. Once the app is loaded, capture, matching, storage, and reporting work locally; a fresh offline launch is not cached.</p>
+</section>
+<section aria-labelledby="flow">
+<h2 id="flow">One action: retake a spot</h2>
+<div class="card">
+<svg class="flow" viewBox="0 0 390 780" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="flow-title flow-desc">
+<title id="flow-title">Move-out capture, from Retake to IndexedDB</title>
+<desc id="flow-desc">Retake opens outScreen. Camera start shows video with the move-in ghost. Match watch compares frames; a score of at least 50 for 500 milliseconds triggers a green frame and one automatic capture. The JPEG stays in a draft until Keep pair calls persist and store save to write IndexedDB. Room and report screens show the saved pair.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 9 5 1 9"/></marker></defs>
+<rect x="8" y="8" width="374" height="82" rx="8"/>
+<text x="24" y="35">Tap Retake → app.js: render()</text><text x="24" y="58">outScreen(spot, version)</text><text class="caption" x="24" y="78">Route: #/capture/:spotId/out</text>
+<path d="M195 90v28" marker-end="url(#arrow)"/>
+<rect x="8" y="122" width="374" height="82" rx="8"/>
+<text x="24" y="149">camera.js: start(video)</text><text x="24" y="172">Live video + 50% move-in ghost</text><text class="caption" x="24" y="192">app.js: startMatch() → match.watch()</text>
+<path d="M195 204v28" marker-end="url(#arrow)"/>
+<rect x="8" y="236" width="374" height="104" rx="8"/>
+<text x="24" y="263">match.js: watch() → score()</text><text x="24" y="286">64×48 gradients, every 125 ms</text><text x="24" y="309">Score ≥ 50 for 500 ms</text><text class="caption" x="24" y="329">The match meter updates while you align.</text>
+<path d="M195 340v28" marker-end="url(#arrow)"/>
+<rect x="8" y="372" width="374" height="104" rx="8"/>
+<text x="24" y="399">app.js: startMatch() callback</text><text x="24" y="422">Green frame + optional vibration</text><text x="24" y="445">After 200 ms: shoot(true)</text><text class="caption" x="24" y="465">camera.capture() → finish() → draft</text>
+<path d="M195 476v28" marker-end="url(#arrow)"/>
+<rect x="8" y="508" width="374" height="104" rx="8"/>
+<text x="24" y="535">app.js: pairScreen() → Keep pair</text><text x="24" y="558">persist() → store.js: save()</text><text x="24" y="581">IndexedDB: same-angle</text><text class="caption" x="24" y="601">home / rooms / spots / photos (JPEG blobs)</text>
+<path d="M195 612v28" marker-end="url(#arrow)"/>
+<rect x="8" y="644" width="374" height="126" rx="8"/>
+<text x="24" y="671">Visible result: saved before/after pair</text><text x="24" y="694">Room shows the new photo and time.</text><text x="24" y="717">Report: renderReport() shows the pair,</text><text x="24" y="740">timestamp, score, and Auto-matched.</text><text class="caption" x="24" y="760">Save as PDF → window.print()</text>
+</svg>
+<p>The automatic shutter fires once per attempt. The capture first lives in the in-memory <code>drafts</code> map; <strong>Keep pair</strong> commits it to the saved record. On a storage failure, the review stays open with a retry button and “Couldn't save on this phone”.</p>
+<p>If the camera cannot open, <code>cameraUnavailable()</code> replaces the camera controls with a move-in preview (when present), an explanation, and <strong>Upload a photo</strong>. An uploaded move-out photo reaches pair review with a Manual label.</p>
+</div>
+</section>
+<section aria-labelledby="route">
+<h2 id="route">Reference route — three stops</h2>
+<p>This is a source-based reference route, not a claim of a completed interactive tour or a browser run during this final pass. Open each file and search for the named symbols.</p>
+<ol>
+<li><strong>Enter the camera:</strong> <a href="../js/app.js">js/app.js</a> — <code>render()</code>, <code>outScreen()</code>, and its nested <code>startMatch()</code>. The hash route selects the spot; the screen layers <code>&lt;img class="ghost-photo"&gt;</code> over video. Opacity and Hide ghost change the guide, while the live image remains the scoring input.</li>
+<li><strong>Decide when to capture:</strong> <a href="../js/match.js">js/match.js</a> — <code>score()</code> and <code>watch()</code>. Gradient correlation supplies the meter. <code>THRESHOLD = 50</code>, <code>HOLD_MS = 500</code>, and the <code>fired</code> flag control the one-shot callback. Back in <code>outScreen()</code>, the callback makes the frame green and calls <code>shoot(true)</code>.</li>
+<li><strong>Keep and display the evidence:</strong> <a href="../js/app.js">js/app.js</a> — <code>finish()</code>, <code>pairScreen()</code>, and <code>persist()</code>; then <a href="../js/store.js">js/store.js</a> — <code>save()</code> and <code>database()</code>. Keep pair saves the JPEG and spot metadata in IndexedDB. <code>roomScreen()</code> and <a href="../js/report.js">js/report.js</a> — <code>renderReport()</code> show the saved result.</li>
+</ol>
+</section>
+<section aria-labelledby="change">
+<h2 id="change">To change this, start here</h2>
+<ul>
+<li><strong>Match strictness or hold time:</strong> <a href="../js/match.js">js/match.js</a>, <code>THRESHOLD</code> and <code>HOLD_MS</code>. Rerun fixture measurements before choosing a value.</li>
+<li><strong>Ghost defaults and camera error wording:</strong> <a href="../js/app.js">js/app.js</a>, <code>outScreen()</code> and <code>cameraUnavailable()</code>. Appearance belongs in <a href="../css/app.css">css/app.css</a>, <code>.ghost-photo</code> and <code>.camera-unavailable</code>.</li>
+<li><strong>Empty-home guidance and sample button:</strong> <a href="../js/app.js">js/app.js</a>, <code>homeScreen()</code>; spacing is under <code>.home-empty</code> and <code>.empty-steps</code> in <a href="../css/app.css">css/app.css</a>.</li>
+<li><strong>Sample rooms and dates:</strong> <a href="../js/store.js">js/store.js</a>, <code>loadSample()</code>. The sample JPEGs live under <code>img/sample/</code>.</li>
+<li><strong>Report captions or page layout:</strong> <a href="../js/report.js">js/report.js</a>, <code>renderReport()</code> and <code>photoFigure()</code>; <a href="../css/print.css">css/print.css</a> controls printed pagination.</li>
+</ul>
+</section>
+<section aria-labelledby="practice">
+<h2 id="practice">A practice to reuse</h2>
+<p><strong>Measure a technical assumption with controlled examples before tuning it.</strong> The original threshold was 70. The <a href="checklist.md">checklist.md → Revisions</a> records fake-camera measurements: same image 100, 3% shift 55, 5% shift 40, 10% shift 32, different scene 0. Threshold 70 demanded roughly better than 2% alignment, so it was changed to 50 to admit the 3% case while rejecting the 5% case.</p>
+<p><a href="../tests/make-fixtures.sh">tests/make-fixtures.sh</a> turns sample photos into Y4M camera streams. <a href="../tests/e2e.mjs">tests/e2e.mjs</a>, <code>slice2()</code>, measures them and asserts the automatic-capture boundary. The checklist records an all-slices pass from the earlier review; this final pass does not claim to rerun it. On another project, turn a vague assumption into a few repeatable inputs, measure the outputs, and retain checks on both sides of the chosen boundary.</p>
+<p>These fixtures measure image similarity under controlled conditions. They do not establish handheld accuracy in changing room light or detect damage. Real-phone checks remain pending.</p>
+</section>
+<section aria-labelledby="run">
+<h2 id="run">Run it again</h2>
+<p>From the app repository root:</p>
+<pre><code>python3 -m http.server 8080
+# Open http://localhost:8080
+# Map: http://localhost:8080/devpost/app-map.html</code></pre>
+<p>For the reviewing agent, with FFmpeg and Playwright/Chromium available:</p>
+<pre><code>bash tests/make-fixtures.sh
+PW_ROOT=/path/to/playwright/project node tests/e2e.mjs all
+PW_ROOT=/path/to/playwright/project node tests/shot.mjs</code></pre>
+<p>The tests create their own Node HTTP server on an automatic port. To inspect just the matching investigation, use <code>node tests/e2e.mjs 2</code> with the same <code>PW_ROOT</code>. The screenshots cover 390×844 and 1280×800. This map itself opens as a local HTML file without a server or scripts.</p>
+</section>
+</main>
+<footer>
+<p><strong>Source snapshot:</strong> baseline commit <code>5ae6f6b69cee0d89a2821e28e97f6148e96b64bc</code>, plus the uncommitted final camera fallback, empty-home spacing, and README corrections. This map was generated on October 23, 2026. Final review commit: pending the reviewing agent's commit. It is a snapshot; refresh paths and explanations when code changes.</p>
+</footer>
+</body>
+</html>
