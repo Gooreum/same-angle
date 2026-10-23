@@ -51,7 +51,7 @@ Build mode: fast
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 2, screenshots of the ghost screen reviewed
+- [x] Early usable behavior explored — after slice 2, screenshots of the ghost screen reviewed
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
@@ -62,13 +62,13 @@ Build mode: fast
 
 - [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
 - [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
-- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
+- [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
 
 Activity and evidence:
 Route and stops:
 Edit outcome:
 Reflection:
-Activity mode:
+Activity mode: reference route only (source-based app map); learner's real-phone try-out still pending
 
 ## Revisions
 
