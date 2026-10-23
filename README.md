@@ -6,7 +6,7 @@ Demo: https://gooreum.github.io/same-angle/
 
 ## The problem
 
-In a 2013 Rent.com survey of 1,000 US renters, 26% said they had lost a security deposit. [Source: Fox Business](https://www.foxbusiness.com/features/how-renters-can-make-sure-to-get-their-deposit-back).
+In a 2013 Rent.com survey of 1,000 US renters, 26% said they had lost a security deposit (as reported by [Fox Business](https://www.foxbusiness.com/features/how-renters-can-make-sure-to-get-their-deposit-back); the original survey is not linked).
 
 When a renter and landlord disagree about a mark on a wall, photos from different angles can make it hard to compare the same spot.
 
@@ -18,7 +18,13 @@ There are no accounts, cloud uploads, analytics, external fonts, or external run
 
 ## How it differs from existing apps
 
-Most move-in/move-out apps put photos side by side after the fact. [Deposit Shield](https://www.appharbour.com/depositshield/) (iOS, paid) also shows a faint ghost of the move-in photo while you shoot, and you judge the alignment by eye. Same Angle adds a live match score that takes the photo itself when the view lines up, prints that score in the report, and runs free in any phone browser with no install. The match score measures image similarity, not the exact camera angle.
+Ghost overlays for repeat photos already exist, so the idea is not new on its own:
+
+- [Deposit Shield](https://www.appharbour.com/depositshield/) (iOS, paid) shows a faint ghost of the move-in photo while you shoot; you judge the alignment by eye.
+- [RentalMove](https://github.com/HackIndiaXYZ/pixels-to-products-cloudinary-ai-hackathon-2026-dot-coders) (Cloudinary AI Hackathon 2026) has a ghost, alignment prompts and an optional auto-shutter, inside a larger cloud product with tenant/owner accounts, Cloudinary uploads and AI change descriptions.
+- Most other inspection apps put photos side by side after the fact.
+
+Same Angle is the small, private version: one static web page, no account, no install, and the photos never leave the phone. A visible match score drives the auto-shutter and is printed next to each pair in the report, so the reader can see how closely each after photo lined up. The score measures image similarity, not the exact camera angle.
 
 ## Try it in 30 seconds
 

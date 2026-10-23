@@ -22,7 +22,7 @@ A renter moving out of an apartment, phone in hand, walking room to room on the 
 Feels like a calm, trustworthy tool, not a toy: a clean camera viewfinder, a clear progress list of rooms, and a report that looks like something you could hand to a landlord or a deposit scheme. Plain, reassuring copy ("Line it up", "Matched").
 
 ## Why This Matters to the Learner
-Losing part of a deposit is common and stressful. In a 2013 Rent.com survey of 1,000 US renters, 26% said they had lost a security deposit (via Fox Business). Most deposit apps put photos side by side afterwards. One iOS app, Deposit Shield (https://www.appharbour.com/depositshield/), also shows a faint ghost of the move-in photo, but leaves judging the alignment to your eye. Same Angle adds a live match score that takes the photo itself when you line up, prints that score in the report, and runs free in any phone browser.
+Losing part of a deposit is common and stressful. In a 2013 Rent.com survey of 1,000 US renters, 26% said they had lost a security deposit (via Fox Business). Most deposit apps put photos side by side afterwards. Ghost overlays already exist (Deposit Shield on iOS; RentalMove, a 2026 hackathon project with accounts and cloud uploads). Same Angle keeps it small and private: a phone-browser page with no account where photos never leave the device, and a visible match score that takes the photo and is printed in the report.
 
 ## What "Working" Looks Like
 On a phone browser: add a room, capture two move-in photos, switch to move-out, see the move-in photo ghosted over the live camera, line it up until the frame turns green and the photo is taken, then open the report and see both pairs side by side with timestamps.

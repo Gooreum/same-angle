@@ -5,7 +5,7 @@ status: approved
 
 # Same Angle — Product Requirements
 
-A phone-browser camera app for renters: it overlays each move-in photo on the live camera at move-out so every before/after pair is taken from the same angle, then turns the pairs into a printable evidence report.
+A phone-browser camera app for renters: it overlays each move-in photo on the live camera at move-out so each before/after pair lines up with the original view, then turns the pairs into a printable evidence report.
 Source: `scope.md > The Unique Kernel`, `scope.md > Who It's For`.
 
 ## The Core Journey
@@ -71,7 +71,7 @@ Navigation: Home → Room → Camera → Pair review → Room; Home → Report.
 - **Reset** — "Delete this home" clears everything after an in-app confirmation.
 
 ## Product Decisions
-- Ghost overlay plus a live match score and auto-capture at capture time, instead of side-by-side afterwards — this is what makes the pairs comparable. Deposit Shield (iOS) also shows a ghost; the match score, auto-capture and score in the report are what Same Angle adds (`scope.md > The Unique Kernel`).
+- Ghost overlay plus a live match score and auto-capture at capture time, instead of side-by-side afterwards — this is what makes the pairs comparable. Deposit Shield (iOS) and RentalMove (cloud, accounts) also use a ghost; Same Angle's difference is no account, no upload, and the match score shown and printed with each pair (`scope.md > The Unique Kernel`).
 - Browser app, no install, no account — judges and renters can open a link; home photos stay private (`scope.md > Explicitly Cut`).
 - A simple image-difference score, not AI damage detection — honest about what it proves.
 - Codex designs and implements; Claude Code plans, reviews screenshots and commits (learner's working split).
