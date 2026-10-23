@@ -36,31 +36,56 @@ try {
     await page.getByRole('link', { name: 'Back', exact: true }).click();
     await page.getByRole('heading', { name: 'My home', exact: true }).waitFor();
     await shot(page, 'home-list', width);
-    // Freeze timers after the camera starts, then advance the real matching loop.
-    // This preserves the brief green state without injecting a match score.
-    await page.clock.install();
-    await openMoveOut(page, state);
-    await page.clock.pauseAt(new Date(Date.now() + 100));
-    for (let elapsed = 0; elapsed < 3000 && !await page.locator('.viewfinder.matched').count(); elapsed += 50) {
-      await page.clock.runFor(50);
-    }
-    assert.equal(await page.locator('.viewfinder.matched').count(), 1, 'Real matching produced a green frame');
-    await shot(page, 'capture-out-matched', width);
-    await page.clock.runFor(400);
-    await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
-    await shot(page, 'pair-review', width);
-    await page.getByRole('button', { name: 'Keep pair', exact: true }).click();
-    await page.getByRole('heading', { name: 'Wall by window', exact: true }).waitFor();
-    const report = await sampleReportState(await snapshot(page));
-    await restore(page, report);
-    await page.goto(`${aligned.url}/#/pair/${report.spots[1].id}`);
-    await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
-    await shot(page, 'pair-review', width);
-    await page.goto(`${aligned.url}/#/report`);
-    await page.locator('.report-pair').first().waitFor();
-    await shot(page, 'report', width);
+    const autoEnv = await setup(fixture('shift3'));
+    try {
+      const autoContext = await autoEnv.browser.newContext({ viewport: { width, height }, permissions: ['camera'] });
+      const capturePage = await autoContext.newPage();
+      await capturePage.goto(autoEnv.url);
+      await restore(capturePage, state);
+      // Capture the real green frame immediately, before the automatic shutter fires.
+      await openMoveOut(capturePage, state);
+      assert.ok(await capturePage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'capture-out-matched: no horizontal overflow');
+      await capturePage.waitForSelector('.viewfinder.matched');
+      await capturePage.screenshot({ path: `${shots}capture-out-matched-${width}.png`, fullPage: true, animations: 'disabled' });
+      await capturePage.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
+      await shot(capturePage, 'pair-review', width);
+      await capturePage.getByRole('button', { name: 'Keep pair', exact: true }).click();
+      await capturePage.getByRole('heading', { name: 'Wall by window', exact: true }).waitFor();
+      const autoCapture = await snapshot(capturePage);
+      // Retake from the shifted fake camera and keep its real manual score.
+      const shifted = await setup(fixture('shift3'));
+      let manualCapture;
+      try {
+        const shiftedContext = await shifted.browser.newContext({ viewport: { width, height }, permissions: ['camera'] });
+        const manualPage = await shiftedContext.newPage();
+        await manualPage.goto(shifted.url);
+        await restore(manualPage, state);
+        await watchAttempt(manualPage);
+        await openMoveOut(manualPage, state);
+        await manualPage.waitForFunction(() => window.attempt.scores.length > 0);
+        assert.ok((await manualPage.evaluate(() => window.attempt.scores)).length, 'Manual screenshot capture has a measured match score');
+        await manualPage.getByRole('button', { name: 'Take photo', exact: true }).click();
+        await manualPage.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
+        await manualPage.getByRole('button', { name: 'Keep pair', exact: true }).click();
+        await manualPage.getByRole('heading', { name: 'Wall by window', exact: true }).waitFor();
+        manualCapture = await snapshot(manualPage);
+        assert.equal(manualCapture.spots[0].outAuto, false, 'Manual capture retains its real method');
+        await shiftedContext.close();
+      } finally { await shifted.close(); }
+      const report = await sampleReportState(autoCapture, manualCapture);
+      await restore(capturePage, report);
+      await capturePage.goto(`${autoEnv.url}/#/pair/${report.spots[1].id}`);
+      await capturePage.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
+      await shot(capturePage, 'pair-review', width);
+      await capturePage.goto(`${autoEnv.url}/#/report`);
+      await capturePage.locator('.report-pair').first().waitFor();
+      await shot(capturePage, 'report', width);
+      await autoContext.close();
+    } finally { await autoEnv.close(); }
     await page.evaluate(async () => { const store = await import('/js/store.js'); if (!await store.deleteHome()) throw new Error('Could not reset screenshot home'); });
     await page.goto(`${aligned.url}/#/`);
+    // The home hash may already be active, so reload to render the cleared store.
+    await page.reload();
     await page.getByRole('button', { name: 'Try with a sample home', exact: true }).click();
     await page.getByRole('heading', { name: 'Sample home', exact: true }).waitFor();
     await shot(page, 'sample-home', width);

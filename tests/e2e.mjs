@@ -191,20 +191,27 @@ export function reportState(captured) {
   state.spots.push(manual, pending);
   return state;
 }
-// Screenshot records use a different bundled scene for each spot.
-export async function sampleReportState(captured) {
-  const state = reportState(captured);
-  const scenes = ['wall-window', 'floor-corner', 'kitchen'];
-  state.photos = await Promise.all(scenes.map(async (scene, index) => ({
-    id: `shot-photo-${index}`,
-    blob: Array.from(await readFile(resolve(root, 'img/sample', `${scene}.jpg`))),
-    width: 1280, height: 960
-  })));
-  state.spots.forEach((spot, index) => {
-    spot.inPhotoId = state.photos[index].id;
-    if (spot.outPhotoId) spot.outPhotoId = state.photos[index].id;
-  });
-  state.spots[2].label = 'Counter & sink';
+// Screenshot pairs keep the actual camera JPEGs, scores, methods and timestamps.
+export async function sampleReportState(captured, manualCapture) {
+  const state = structuredClone(captured);
+  const first = state.spots[0];
+  const manual = { ...manualCapture.spots[0], id: 'shot-manual', label: 'Wall by window · manual', order: 1 };
+  const room = { id: 'shot-kitchen', homeId: state.home.id, name: 'Kitchen', order: 1 };
+  const pending = { ...first, id: 'shot-pending', roomId: room.id, label: 'Counter & sink', order: 0,
+    inPhotoId: 'shot-kitchen-photo', outPhotoId: null, outAt: null, outScore: null, outAuto: false };
+  const photoIds = new Set(state.photos.map(photo => photo.id));
+  state.photos.push(...manualCapture.photos.filter(photo => !photoIds.has(photo.id)));
+  state.photos.push({ id: pending.inPhotoId, blob: Array.from(await readFile(resolve(root, 'img/sample/kitchen.jpg'))), width: 1280, height: 960 });
+  state.rooms.push(room);
+  state.spots.push(manual, pending);
+  for (const spot of [first, manual]) {
+    assert.notEqual(spot.inPhotoId, spot.outPhotoId, 'Screenshot pair uses separate camera captures');
+    const before = state.photos.find(photo => photo.id === spot.inPhotoId);
+    const after = state.photos.find(photo => photo.id === spot.outPhotoId);
+    assert.notDeepEqual(before.blob, after.blob, 'Screenshot pair contains different captured JPEGs');
+    assert.ok(Number.isFinite(spot.outScore), 'Screenshot uses the app-computed match score');
+    for (const at of [spot.inAt, spot.outAt]) assert.ok(Date.parse(at) <= Date.now(), 'Screenshot capture is not future-dated');
+  }
   return state;
 }
 export async function denyCamera(context) {
@@ -385,6 +392,7 @@ async function slice1(env) {
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => assert.ok(request.url().startsWith(env.url) || /^(blob:|data:)/.test(request.url()), 'No external requests'));
   await page.goto(env.url);
+  await page.getByText('Shoot move-out photos from the same angle as move-in.', { exact: true }).waitFor();
   await addRoom(page);
   await openCamera(page);
   await takePhoto(page);

@@ -30,7 +30,7 @@ PRD ref: `prd.md > The Core Journey`.
 - Icons: inline SVG from Lucide (ISC license, credited in README).
 - Font: system UI font stack (no download needed).
 - Tests: Playwright (Chromium) driving the app with a fake camera stream; run from `tests/`.
-- Unverified until slice 2: iOS Safari camera behaviour inside a home-screen-less page (needs HTTPS — GitHub Pages provides it).
+- Still unverified: iOS Safari and Android Chrome camera behaviour on a real phone (needs HTTPS — GitHub Pages provides it).
 
 ## Where It Runs and How Someone Tries It
 - Runtime: any modern phone or desktop browser. Camera needs HTTPS or `localhost`.
@@ -56,7 +56,7 @@ Starts/stops the rear camera (`facingMode: environment`), grabs frames to canvas
 PRD ref: `prd.md > Try without a camera`.
 
 ### Ghost capture and match (`js/match.js`)
-`score(liveCanvas, ghostImage) → 0..100`: draw both to 64×48, convert to grayscale, compute zero-mean normalized cross-correlation on gradient magnitude (less sensitive to lighting), map to 0–100. A loop at ~8 fps updates the meter; `THRESHOLD` (start 70, tuned in build) held 500 ms triggers one capture.
+`score(liveCanvas, ghostImage) → 0..100`: draw both to 64×48, convert to grayscale, compute zero-mean normalized cross-correlation on gradient magnitude (less sensitive to lighting), map to 0–100. A loop at ~8 fps updates the meter; `THRESHOLD` (50, lowered from 70 after fixture measurements — see `checklist.md > Revisions`) held 500 ms triggers one capture.
 PRD ref: `prd.md > Ghost capture (the kernel)`.
 
 ### Report (`js/report.js`, `css/print.css`)

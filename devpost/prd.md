@@ -9,7 +9,7 @@ A phone-browser camera app for renters: it overlays each move-in photo on the li
 Source: `scope.md > The Unique Kernel`, `scope.md > Who It's For`.
 
 ## The Core Journey
-1. The renter opens the link on their phone. First screen: a home with no rooms yet and one clear action, "Add a room". A one-line promise explains the app: "Shoot move-out photos from the exact same angle as move-in."
+1. The renter opens the link on their phone. First screen: a home with no rooms yet and one clear action, "Add a room". A one-line promise explains the app: "Shoot move-out photos from the same angle as move-in."
 2. They add a room ("Living room") and are in **Move-in** mode. They tap "Add spot", the camera opens, they take a photo of a wall. The photo is saved with date and time and gets a short label ("Wall by window"). They add a second spot.
 3. Weeks or months later (in the demo: right away), they switch the home to **Move-out** mode. Each spot now shows its move-in thumbnail and a "Retake" state.
 4. They open a spot. The live camera fills the screen with the move-in photo on top at about 50% opacity — the ghost. A match meter shows how closely the live view lines up with the ghost.
@@ -71,7 +71,7 @@ Navigation: Home → Room → Camera → Pair review → Room; Home → Report.
 - **Reset** — "Delete this home" clears everything after an in-app confirmation.
 
 ## Product Decisions
-- Ghost overlay at capture time instead of side-by-side afterwards — this is what makes the pairs comparable and what nobody else does (`scope.md > The Unique Kernel`).
+- Ghost overlay plus a live match score and auto-capture at capture time, instead of side-by-side afterwards — this is what makes the pairs comparable. Deposit Shield (iOS) also shows a ghost; the match score, auto-capture and score in the report are what Same Angle adds (`scope.md > The Unique Kernel`).
 - Browser app, no install, no account — judges and renters can open a link; home photos stay private (`scope.md > Explicitly Cut`).
 - A simple image-difference score, not AI damage detection — honest about what it proves.
 - Codex designs and implements; Claude Code plans, reviews screenshots and commits (learner's working split).

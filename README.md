@@ -16,6 +16,10 @@ Same Angle overlays the move-in photo at 50% opacity over the live move-out came
 
 There are no accounts, cloud uploads, analytics, external fonts, or external runtime services. Choosing “Upload a photo” reads a local image file; it sends nothing to a server. Matching compares image structure; it does not detect damage.
 
+## How it differs from existing apps
+
+Most move-in/move-out apps put photos side by side after the fact. [Deposit Shield](https://www.appharbour.com/depositshield/) (iOS, paid) also shows a faint ghost of the move-in photo while you shoot, and you judge the alignment by eye. Same Angle adds a live match score that takes the photo itself when the view lines up, prints that score in the report, and runs free in any phone browser with no install. The match score measures image similarity, not the exact camera angle.
+
 ## Try it in 30 seconds
 
 1. On the empty Home screen, choose **Try with a sample home**. It loads Living room (Wall by window, Floor corner) and Kitchen (Counter & sink), with move-in dates 30 days earlier.
@@ -76,7 +80,7 @@ PW_ROOT=/path/to/playwright/project node tests/shot.mjs
 
 The test server uses Node's built-in HTTP module on an automatic port. Slice 1 checks camera capture, reload persistence, editing, upload, and saving after a storage failure. Slice 2 prints same/3%/5%/10%/different match scores and asserts one automatic capture for same and 3%, and no automatic capture for 5%, 10%, and different scenes. Slice 3 checks report content, print invocation, and a two-page PDF for three pairs. Slice 4 checks the camera-denied upload journey through a report, sample dates and persistence, low-match manual capture, normal capture without a move-in photo, and deletion/cancellation.
 
-`all` runs slices 1, 2, 3, and 4 in order. Screenshots and `report.pdf` go in `_shots/`. Browser checks and screenshots are prepared for the reviewing agent to execute; they were not run in this slice's implementation pass.
+`all` runs slices 1, 2, 3, and 4 in order. Screenshots and `report.pdf` go in `_shots/`. All four slices pass in Chromium with a fake camera (`node tests/e2e.mjs all`).
 
 ## Limitations
 
