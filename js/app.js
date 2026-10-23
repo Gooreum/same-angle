@@ -117,7 +117,25 @@ function homeScreen() {
     const saved = roomSpots.filter(spot => home.mode === 'out' ? spot.outPhotoId : spot.inPhotoId).length;
     const thumb = roomSpots.find(spot => spot.inPhotoId);
     return `<article class="room-card"><a class="room-link" href="#/room/${room.id}">${thumb ? `<img class="room-thumb" src="${photoUrl(thumb.inPhotoId)}" alt="Move-in view of ${escape(room.name)}">` : `<span class="room-thumb placeholder">${icon('home')}</span>`}<div><h3>${escape(room.name)}</h3><p class="muted small">${saved} of ${roomSpots.length} ${spotWord(roomSpots.length)} ${home.mode === 'out' ? 'retaken' : 'photographed'}</p></div>${icon('arrow')}</a><button class="icon-button" data-action="room-menu" data-id="${room.id}" aria-label="Options for ${escape(room.name)}">${icon('more')}</button></article>`;
-  }).join('')}</div>` : `<div class="empty-state"><span class="empty-icon">${icon('home')}</span><h2>A clear record starts here.</h2><p>Add a room, then photograph the spots you want to remember.</p><div class="empty-example"><span>01</span><div><strong>Move-in</strong><p>Photograph each spot.</p></div></div><div class="empty-example"><span>02</span><div><strong>Move-out</strong><p>Line up the ghost.</p></div></div><div class="empty-example"><span>03</span><div><strong>Report</strong><p>Save before/after as PDF.</p></div></div></div>`}<button class="primary full" data-action="add-room">${icon('plus')} Add a room</button><a class="secondary full" href="#/report">Report ${icon('arrow')}</a><aside class="note"><strong>A little care now. A clearer record later.</strong><p>Capture the details while the room is empty. Every photo keeps its date and time.</p></aside>${privacy()}</section>`;
+  }).join('')}</div>` : `<div class="empty-state"><span class="empty-icon">${icon('home')}</span><h2>A clear record starts here.</h2><p>Add a room, then photograph the spots you want to remember.</p><div class="empty-example"><span>01</span><div><strong>Move-in</strong><p>Photograph each spot.</p></div></div><div class="empty-example"><span>02</span><div><strong>Move-out</strong><p>Line up the ghost.</p></div></div><div class="empty-example"><span>03</span><div><strong>Report</strong><p>Save before/after as PDF.</p></div></div></div>`}<button class="primary full" data-action="add-room">${icon('plus')} Add a room</button>${rooms.length ? '' : '<button class="secondary full" data-action="load-sample">Try with a sample home</button>'}<a class="secondary full" href="#/report">Report ${icon('arrow')}</a><aside class="note"><strong>A little care now. A clearer record later.</strong><p>Capture the details while the room is empty. Every photo keeps its date and time.</p></aside>${privacy()}${rooms.length ? '<button class="text-danger full" data-action="delete-home">Delete this home</button>' : ''}</section>`;
+  bind('load-sample', async event => {
+    event.currentTarget.disabled = true;
+    try {
+      const success = await store.loadSample();
+      pendingSave = !success;
+      await render();
+      notify(success ? 'Sample home loaded — try retaking a spot.' : "Couldn't save on this phone");
+    } catch {
+      await render();
+      notify('Could not load the sample photos. Try again.');
+    }
+  });
+  bind('delete-home', () => confirmDelete('Delete this home?', 'All rooms, spots, and photos will be deleted from this phone. This cannot be undone.', async () => {
+    pendingSave = !await store.deleteHome();
+    drafts.clear();
+    await render();
+    notify(pendingSave ? "Couldn't save on this phone" : 'Home deleted');
+  }));
   bind('mode', async event => { home.mode = event.currentTarget.dataset.mode; await persist(); await render(); });
   bind('add-room', () => promptSheet('Add a room', 'Room name', '', 'Add room', async name => {
     const room = { id: store.id(), homeId: home.id, name, order: rooms.length };

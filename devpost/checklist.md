@@ -39,7 +39,7 @@ Build mode: fast
   Learner check: Open the report and save it as PDF.
   Commit: `Add printable before/after report`
 
-- [ ] **4. Edge states and the sample home**
+- [x] **4. Edge states and the sample home**
   Becomes usable: Camera denied → upload; low match hint; spot with no move-in photo; delete home; "Try with a sample home".
   Why now: Lets a judge on a laptop try it and keeps real use from dead-ending.
   PRD ref: `prd.md > States and Boundaries`, `prd.md > Try without a camera`
@@ -77,3 +77,8 @@ Activity mode:
 - Slice 2 implementation complete: added mode switching, adjustable ghost and live-only view, 64×48 gradient correlation at 8 Hz, threshold 70 held for 500 ms, one-shot automatic capture with green frame and optional vibration, manual capture, and keep/retake pair review. Fixed singular spot counts, the empty-home three-step explanation, and the duplicate home title. Generated the three sample JPEGs early for deterministic image-based fixtures; sample loading remains in slice 4. Added same/10%-shift/other fake-camera tests and screenshot cases. Verified with `node tests/e2e.mjs 2` (passed). Measured scores (same / 10% shift / other): 100 / 32 / 0, so threshold 70 separates lined-up from off; finer shifts and real-phone threshold tuning still to check.
 
 - Slice 3 implementation complete: added the Report route, room/spot photo pairs with individual timestamps, capture dates, match scores and capture methods, Not retaken states, the local-only footer, and Save as PDF via window.print(). Print layout uses one complete pair per A4 page. Fixed toast dismissal on navigation and matched-state instructions. Added 3% and 5% shifted camera fixtures and five-score logging without changing threshold 70. Added slice 3 report/PDF pagination checks and report screenshots at both widths. Verified with `node tests/e2e.mjs 3` (passed; 3 pairs → 3-page PDF). Fine-shift scores (same / 3% / 5% / 10% / other): 100 / 55 / 40 / 32 / 0 — threshold 70 needs better than ~2% alignment, too strict for a handheld phone.
+
+
+- Slice 4 implementation complete: added an empty-home sample loader (Living room: Wall by window and Floor corner; Kitchen: Counter & sink) with bundled photos dated 30 calendar days before loading, and in-app Delete this home confirmation/reset. Preserved camera-denied uploads through pair review and report, low-match guidance/manual shutter, and normal capture without a move-in photo; added slice 4 assertions, sequential all-slices execution, and sample-home/camera-denied/delete-confirm screenshots at both widths. Report cards no longer repeat room names; print layout targets two unsplit pairs per A4 page (three pairs → two pages). Screenshot report/review data uses distinct local scenes and ordinary labels. Completed the English README. This build checked JavaScript syntax and HTML closing structure only; browser tests, PDF pagination, screenshots, and real-phone checks remain for the reviewing agent.
+
+- Threshold 70 → 50, based on the review measurements: same=100, shift3=55, shift5=40, shift10=32, other=0. Slice 2 now asserts automatic capture at 3% shift and no automatic capture at 5% shift. Verified with `node tests/e2e.mjs all` (slices 1–4 passed; report PDF 3 pairs → 2 pages).

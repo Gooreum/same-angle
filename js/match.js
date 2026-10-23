@@ -1,5 +1,5 @@
 // Original implementation, MIT. Gradient zero-mean normalized cross-correlation.
-export const THRESHOLD = 70;
+export const THRESHOLD = 50;
 export const HOLD_MS = 500;
 const width = 64, height = 48;
 const canvas = document.createElement('canvas');

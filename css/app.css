@@ -176,7 +176,6 @@ input[type="range"] { padding: 0; border: 0; accent-color: var(--surface); backg
 .report-room > h2 { margin-bottom: var(--s4); }
 .report-pair { padding: var(--s4); margin-bottom: var(--s4); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
 .report-pair-heading { margin-bottom: var(--s4); }
-.report-room-label { font-size: var(--text-xs); color: var(--muted); margin-bottom: var(--s1); overflow-wrap: anywhere; }
 .report-photos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s3); }
 .report-photos figure { min-width: 0; margin: 0; }
 .report-photos img, .report-missing { width: 100%; aspect-ratio: 4/3; object-fit: contain; background: var(--paper); border-radius: var(--radius-small); }

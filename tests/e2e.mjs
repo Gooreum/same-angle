@@ -116,10 +116,10 @@ export async function slice2() {
       await watchAttempt(page);
       await openMoveOut(page, baseline);
       assert.equal(await page.locator('#ghost-opacity').inputValue(), '50', 'Ghost starts at 50%');
-      if (name === 'same') {
+      if (name === 'same' || name === 'shift3') {
         await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
-        scores.same = await observedScore(page);
-        assert.ok(scores.same >= 70, 'Identical camera view scores above the match threshold');
+        scores[name] = await observedScore(page);
+        assert.ok(scores[name] >= 50, `${name}: camera view scores above the match threshold`);
         const attempt = await page.evaluate(() => window.attempt);
         assert.ok(attempt.matched, 'Matched frame became green before automatic capture');
         await page.waitForTimeout(1200);
@@ -133,10 +133,15 @@ export async function slice2() {
         assert.equal(kept.photos.length, 2);
         assert.ok(kept.spots[0].outPhotoId && Number.isFinite(Date.parse(kept.spots[0].outAt)));
         assert.equal(kept.spots[0].outAuto, true);
-        assert.ok(kept.spots[0].outScore >= 70);
+        assert.ok(kept.spots[0].outScore >= 50);
       } else if (name.startsWith('shift')) {
         await page.waitForFunction(() => window.attempt.scores.length >= 4);
         scores[name === 'shift' ? 'shift10' : name] = await observedScore(page);
+        await page.waitForTimeout(1200);
+        assert.equal(await page.evaluate(() => window.attempt.reviews), 0, `${name}: no automatic capture below threshold`);
+        assert.equal(await page.locator('.viewfinder.matched').count(), 0);
+        assert.ok(scores[name === 'shift' ? 'shift10' : name] < 50, `${name}: score stays below 50`);
+        assert.equal(await page.getByRole('button', { name: 'Take photo', exact: true }).isEnabled(), true);
       } else {
         await page.locator('#ghost-opacity').fill('25');
         await page.locator('#ghost-opacity').dispatchEvent('input');
@@ -147,7 +152,7 @@ export async function slice2() {
         await page.waitForTimeout(1800);
         scores.other = await observedScore(page);
         assert.equal(await page.evaluate(() => window.attempt.reviews), 0, 'Different scene does not auto-capture');
-        assert.ok(scores.other < 70, 'Different scene remains below the match threshold');
+        assert.ok(scores.other < 50, 'Different scene remains below the match threshold');
         await page.getByRole('button', { name: 'Take photo', exact: true }).click();
         await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
         await page.getByRole('button', { name: 'Retake photo', exact: true }).click();
@@ -185,6 +190,130 @@ export function reportState(captured) {
   state.rooms.push(room);
   state.spots.push(manual, pending);
   return state;
+}
+// Screenshot records use a different bundled scene for each spot.
+export async function sampleReportState(captured) {
+  const state = reportState(captured);
+  const scenes = ['wall-window', 'floor-corner', 'kitchen'];
+  state.photos = await Promise.all(scenes.map(async (scene, index) => ({
+    id: `shot-photo-${index}`,
+    blob: Array.from(await readFile(resolve(root, 'img/sample', `${scene}.jpg`))),
+    width: 1280, height: 960
+  })));
+  state.spots.forEach((spot, index) => {
+    spot.inPhotoId = state.photos[index].id;
+    if (spot.outPhotoId) spot.outPhotoId = state.photos[index].id;
+  });
+  state.spots[2].label = 'Counter & sink';
+  return state;
+}
+export async function denyCamera(context) {
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: {
+      getUserMedia: () => Promise.reject(new DOMException('Denied', 'NotAllowedError'))
+    } });
+  });
+}
+export async function slice4() {
+  const env = await setup(fixture('other'));
+  try {
+    const denied = await env.browser.newContext({ viewport: { width: 390, height: 844 } });
+    await denyCamera(denied);
+    const page = await denied.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    page.on('dialog', dialog => { errors.push('Unexpected browser dialog'); dialog.dismiss(); });
+    page.on('request', request => assert.ok(request.url().startsWith(env.url) || /^(blob:|data:)/.test(request.url()), 'No external requests'));
+    await page.goto(env.url);
+    await addRoom(page);
+    await page.getByRole('button', { name: 'Add spot', exact: true }).click();
+    await page.getByText('Camera unavailable', { exact: true }).waitFor();
+    await page.locator('#upload-photo').setInputFiles(resolve(root, 'img/sample/wall-window.jpg'));
+    await page.getByLabel('Spot label', { exact: true }).fill('Uploaded wall');
+    await page.getByRole('button', { name: 'Save move-in photo', exact: true }).click();
+    await page.getByRole('heading', { name: 'Uploaded wall', exact: true }).waitFor();
+    let state = await snapshot(page);
+    await page.goto(`${env.url}/#/`);
+    await page.getByRole('button', { name: 'Move-out', exact: true }).click();
+    await page.goto(`${env.url}/#/capture/${state.spots[0].id}/out`);
+    await page.getByText('Camera unavailable', { exact: true }).waitFor();
+    await page.locator('#upload-photo').setInputFiles(resolve(root, 'img/sample/wall-window.jpg'));
+    await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
+    assert.match(await page.locator('.pair-result').innerText(), /Manual/);
+    await page.getByRole('button', { name: 'Keep pair', exact: true }).click();
+    await page.getByRole('heading', { name: 'Uploaded wall', exact: true }).waitFor();
+    await page.reload();
+    state = await snapshot(page);
+    assert.ok(state.spots[0].inPhotoId && state.spots[0].outPhotoId);
+    assert.equal(state.spots[0].outAuto, false);
+    await page.goto(`${env.url}/#/report`);
+    await page.locator('.report-pair').waitFor();
+    assert.equal(await page.locator('.report-photos img').count(), 2, 'Denied camera reaches completed report by upload');
+    await page.goto(`${env.url}/#/`);
+    await page.getByRole('button', { name: 'Delete this home', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+    assert.equal((await snapshot(page)).spots.length, 1, 'Cancel preserves the home');
+    await page.getByRole('button', { name: 'Delete this home', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByRole('heading', { name: 'A clear record starts here.', exact: true }).waitFor();
+    await page.reload();
+    state = await snapshot(page);
+    assert.equal(state.rooms.length + state.spots.length + state.photos.length, 0, 'Delete clears all stored photos and records');
+    const loadedAt = Date.now();
+    await page.getByRole('button', { name: 'Try with a sample home', exact: true }).click();
+    await page.getByRole('heading', { name: 'Sample home', exact: true }).waitFor();
+    await page.reload();
+    await page.getByRole('heading', { name: 'Sample home', exact: true }).waitFor();
+    state = await snapshot(page);
+    assert.deepEqual(state.rooms.map(room => room.name).sort(), ['Kitchen', 'Living room']);
+    assert.equal(state.spots.length, 3);
+    assert.equal(state.photos.length, 3);
+    assert.equal(state.home.mode, 'out', 'Sample is ready for retaking');
+    assert.deepEqual(state.spots.map(spot => spot.label).sort(), ['Counter & sink', 'Floor corner', 'Wall by window']);
+    for (const spot of state.spots) {
+      const expected = new Date(loadedAt);
+      expected.setDate(expected.getDate() - 30);
+      assert.ok(Math.abs(Date.parse(spot.inAt) - expected.getTime()) < 10000, 'Sample timestamp is 30 calendar days before loading');
+      assert.equal(spot.outPhotoId, null);
+    }
+    assert.ok(state.photos.every(photo => photo.blob.length > 0 && photo.width === 1280 && photo.height === 960));
+    assert.equal(await page.getByRole('button', { name: 'Try with a sample home', exact: true }).count(), 0, 'Sample cannot overwrite a populated home');
+    // Missing move-in records must offer normal capture without an alignment meter.
+    const missing = structuredClone(state);
+    const missingSpot = missing.spots.find(spot => spot.label === 'Wall by window');
+    missingSpot.inPhotoId = null; missingSpot.inAt = null;
+    await restore(page, missing);
+    await page.goto(`${env.url}/#/capture/${missingSpot.id}/out`);
+    await page.getByText('No move-in photo for this spot. Take a normal photo.', { exact: true }).waitFor();
+    await page.getByText('Camera unavailable', { exact: true }).waitFor();
+    assert.equal(await page.locator('.ghost-photo, meter, #ghost-opacity').count(), 0);
+    await page.locator('#upload-photo').setInputFiles(resolve(root, 'img/sample/wall-window.jpg'));
+    await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
+    await page.getByText('No move-in photo', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Keep pair', exact: true }).click();
+    await page.getByRole('heading', { name: 'Wall by window', exact: true }).waitFor();
+    assert.ok((await snapshot(page)).spots.find(spot => spot.id === missingSpot.id).outPhotoId);
+    assert.deepEqual(errors, []);
+    await denied.close();
+
+    const context = await env.browser.newContext({ viewport: { width: 390, height: 844 }, permissions: ['camera'] });
+    const live = await context.newPage();
+    await live.goto(env.url);
+    await restore(live, state);
+    await watchAttempt(live);
+    await openMoveOut(live, { ...state, spots: [state.spots.find(spot => spot.label === 'Wall by window')] });
+    await live.waitForFunction(() => window.attempt.scores.length >= 5);
+    await live.waitForTimeout(1000);
+    await live.getByText('Too dark or too different — use the manual shutter', { exact: true }).waitFor();
+    assert.equal(await live.evaluate(() => window.attempt.reviews), 0);
+    assert.equal(await live.locator('.viewfinder.matched').count(), 0);
+    assert.ok(Number(await live.locator('#match-score').getAttribute('data-score')) < 50);
+    await live.getByRole('button', { name: 'Take photo', exact: true }).click();
+    await live.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
+    assert.match(await live.locator('.pair-result').innerText(), /Manual/);
+    await context.close();
+    console.log('Slice 4: denied-camera upload journey, sample persistence and timestamps, low-match manual shutter, missing move-in capture, and home deletion/cancellation passed.');
+  } finally { await env.close(); }
 }
 export async function slice3() {
   const env = await setup(fixture('same'));
@@ -237,7 +366,8 @@ export async function slice3() {
     const pdf = await page.pdf({ path: resolve(shots, 'report.pdf'), preferCSSPageSize: true, printBackground: true });
     const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length;
     console.log(`Report PDF: ${pages} pages for 3 pairs (_shots/report.pdf)`);
-    assert.equal(pages, 3, 'Print uses one complete pair per page');
+    assert.equal(pages, 2, 'Print uses two complete pairs on the first page and one on the second');
+    assert.equal(await page.locator('.report-pair .report-room-label').count(), 0, 'Room names only appear as section headings');
     await page.emulateMedia({ media: 'screen' });
     await page.reload();
     await page.locator('.report-pair').first().waitFor();
@@ -313,10 +443,13 @@ async function slice1(env) {
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const slice = process.argv[2] || '1';
-  if (slice === '3') await slice3();
-  else if (slice === '2') await slice2();
-  else if (slice === '1') {
-    const env = await setup();
-    try { await slice1(env); } finally { await env.close(); }
-  } else throw new Error(`Slice ${slice} is not implemented in this build.`);
+  if (!['1', '2', '3', '4', 'all'].includes(slice)) throw new Error(`Unknown slice: ${slice}`);
+  for (const selected of slice === 'all' ? ['1', '2', '3', '4'] : [slice]) {
+    if (selected === '1') {
+      const env = await setup();
+      try { await slice1(env); } finally { await env.close(); }
+    } else if (selected === '2') await slice2();
+    else if (selected === '3') await slice3();
+    else await slice4();
+  }
 }

@@ -1,8 +1,8 @@
-// Original implementation, MIT. Capture only screens implemented through slice 3.
+// Original implementation, MIT. Capture the complete app and its edge states.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { setup, fixture, addRoom, openCamera, snapshot, restore, openMoveOut, watchAttempt, reportState } from './e2e.mjs';
+import { setup, fixture, addRoom, openCamera, snapshot, restore, openMoveOut, watchAttempt, sampleReportState, denyCamera } from './e2e.mjs';
 const shots = fileURLToPath(new URL('../_shots/', import.meta.url));
 await mkdir(shots, { recursive: true });
 const states = new Map();
@@ -51,11 +51,36 @@ try {
     await shot(page, 'pair-review', width);
     await page.getByRole('button', { name: 'Keep pair', exact: true }).click();
     await page.getByRole('heading', { name: 'Wall by window', exact: true }).waitFor();
-    await restore(page, reportState(await snapshot(page)));
+    const report = await sampleReportState(await snapshot(page));
+    await restore(page, report);
+    await page.goto(`${aligned.url}/#/pair/${report.spots[1].id}`);
+    await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
+    await shot(page, 'pair-review', width);
     await page.goto(`${aligned.url}/#/report`);
     await page.locator('.report-pair').first().waitFor();
     await shot(page, 'report', width);
+    await page.evaluate(async () => { const store = await import('/js/store.js'); if (!await store.deleteHome()) throw new Error('Could not reset screenshot home'); });
+    await page.goto(`${aligned.url}/#/`);
+    await page.getByRole('button', { name: 'Try with a sample home', exact: true }).click();
+    await page.getByRole('heading', { name: 'Sample home', exact: true }).waitFor();
+    await shot(page, 'sample-home', width);
+    await page.getByRole('button', { name: 'Delete this home', exact: true }).click();
+    await page.getByRole('dialog').waitFor();
+    await shot(page, 'delete-confirm', width);
     await context.close();
+
+    const denied = await aligned.browser.newContext({ viewport: { width, height } });
+    await denyCamera(denied);
+    const blocked = await denied.newPage();
+    await blocked.goto(aligned.url);
+    await blocked.getByRole('button', { name: 'Try with a sample home', exact: true }).click();
+    await blocked.getByRole('heading', { name: 'Sample home', exact: true }).waitFor();
+    const sample = await snapshot(blocked);
+    const wall = sample.spots.find(spot => spot.label === 'Wall by window');
+    await blocked.goto(`${aligned.url}/#/capture/${wall.id}/out`);
+    await blocked.getByText('Camera unavailable', { exact: true }).waitFor();
+    await shot(blocked, 'camera-denied', width);
+    await denied.close();
   }
 } finally { await aligned.close(); }
 const different = await setup(fixture('other'));
@@ -69,9 +94,9 @@ try {
     await watchAttempt(page);
     await openMoveOut(page, state);
     await page.waitForFunction(() => window.attempt.scores.length >= 4);
-    assert.ok(Number(await page.locator('#match-score').getAttribute('data-score')) < 70, 'Different scene stays below the match threshold');
+    assert.ok(Number(await page.locator('#match-score').getAttribute('data-score')) < 50, 'Different scene stays below the match threshold');
     await shot(page, 'capture-out', width);
     await context.close();
   }
 } finally { await different.close(); }
-console.log('Captured slice 1–3 screens, including the report, at 390 px and 1280 px.');
+console.log('Captured slice 1–4 screens, including sample home, camera denied, deletion, and report, at 390 px and 1280 px.');
