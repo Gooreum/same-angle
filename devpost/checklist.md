@@ -72,7 +72,7 @@ Activity mode: reference route only (source-based app map); learner's real-phone
 
 ## Revisions
 
-- Final feedback 3: removed the exact-angle promise from Home. Screenshot review/report pairs now use separate same/shift3 fake-camera captures and retain app-computed scores, capture methods and actual timestamps; screenshot Date values stay fixed at the actual capture-time clock while matching timers advance. Added assertions for distinct JPEGs, measured scores, non-future timestamps and the updated Home copy. JavaScript syntax and HTML closing structure were checked statically; browser tests and screenshot rendering remain with the reviewing agent. No new features or routes.
+- Final feedback 3: removed the exact-angle promise from Home. Screenshot review/report pairs now use separate same/shift3 fake-camera captures and retain app-computed scores, capture methods and actual timestamps; screenshot Date values stay fixed at the actual capture-time clock while matching timers advance. Added assertions for distinct JPEGs, measured scores, non-future timestamps and the updated Home copy. Verified with `node tests/e2e.mjs all` and `node tests/shot.mjs` (both pass). No new features or routes.
 
 - Final feedback 2: preserved the missing move-in photo explanation when move-out capture falls back to upload, while keeping the existing fallback copy for spots with a move-in photo. Updated slice 4 assertions to check the settled camera-unavailable copy in both cases. JavaScript syntax and HTML closing structure were checked; browser regression execution remains with the reviewing agent. No routes or function names changed, so the app map remains unchanged.
 
