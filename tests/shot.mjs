@@ -1,8 +1,8 @@
-// Original implementation, MIT. Capture only screens implemented through slice 2.
+// Original implementation, MIT. Capture only screens implemented through slice 3.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { setup, fixture, addRoom, openCamera, snapshot, restore, openMoveOut, watchAttempt } from './e2e.mjs';
+import { setup, fixture, addRoom, openCamera, snapshot, restore, openMoveOut, watchAttempt, reportState } from './e2e.mjs';
 const shots = fileURLToPath(new URL('../_shots/', import.meta.url));
 await mkdir(shots, { recursive: true });
 const states = new Map();
@@ -49,6 +49,12 @@ try {
     await page.clock.runFor(400);
     await page.getByRole('heading', { name: 'Review your pair', exact: true }).waitFor();
     await shot(page, 'pair-review', width);
+    await page.getByRole('button', { name: 'Keep pair', exact: true }).click();
+    await page.getByRole('heading', { name: 'Wall by window', exact: true }).waitFor();
+    await restore(page, reportState(await snapshot(page)));
+    await page.goto(`${aligned.url}/#/report`);
+    await page.locator('.report-pair').first().waitFor();
+    await shot(page, 'report', width);
     await context.close();
   }
 } finally { await aligned.close(); }
@@ -68,4 +74,4 @@ try {
     await context.close();
   }
 } finally { await different.close(); }
-console.log('Captured slice 1–2 screens at 390 px and 1280 px. Report screenshots start in slice 3.');
+console.log('Captured slice 1–3 screens, including the report, at 390 px and 1280 px.');

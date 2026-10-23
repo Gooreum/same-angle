@@ -29,7 +29,7 @@ Build mode: fast
   Learner check: Retake a spot on a phone and watch the frame go green.
   Commit: `Add ghost overlay, match meter and auto-capture`
 
-- [ ] **3. A printable before/after report**
+- [x] **3. A printable before/after report**
   Becomes usable: The Report screen lists every pair with timestamps and scores and prints cleanly to PDF.
   Why now: Turns captures into the evidence the renter actually needs.
   PRD ref: `prd.md > Report`
@@ -75,3 +75,5 @@ Activity mode:
 - Slice 1 implementation complete: added the app shell, room/spot editing, camera/upload move-in capture, timestamped IndexedDB storage, and session photo retention with save retry. Verified with `node tests/e2e.mjs 1` (Chromium fake camera: capture, reload keeps photo and timestamp, rename, delete-cancel, upload fallback, save retry) and screenshots at 390 px and 1280 px; real-phone check still pending. Tests use Chromium's built-in fake camera for slice 1; generated sample photos and image-based Y4M fixtures remain in slices 4 and 2 respectively.
 
 - Slice 2 implementation complete: added mode switching, adjustable ghost and live-only view, 64×48 gradient correlation at 8 Hz, threshold 70 held for 500 ms, one-shot automatic capture with green frame and optional vibration, manual capture, and keep/retake pair review. Fixed singular spot counts, the empty-home three-step explanation, and the duplicate home title. Generated the three sample JPEGs early for deterministic image-based fixtures; sample loading remains in slice 4. Added same/10%-shift/other fake-camera tests and screenshot cases. Verified with `node tests/e2e.mjs 2` (passed). Measured scores (same / 10% shift / other): 100 / 32 / 0, so threshold 70 separates lined-up from off; finer shifts and real-phone threshold tuning still to check.
+
+- Slice 3 implementation complete: added the Report route, room/spot photo pairs with individual timestamps, capture dates, match scores and capture methods, Not retaken states, the local-only footer, and Save as PDF via window.print(). Print layout uses one complete pair per A4 page. Fixed toast dismissal on navigation and matched-state instructions. Added 3% and 5% shifted camera fixtures and five-score logging without changing threshold 70. Added slice 3 report/PDF pagination checks and report screenshots at both widths. Verified with `node tests/e2e.mjs 3` (passed; 3 pairs → 3-page PDF). Fine-shift scores (same / 3% / 5% / 10% / other): 100 / 55 / 40 / 32 / 0 — threshold 70 needs better than ~2% alignment, too strict for a handheld phone.

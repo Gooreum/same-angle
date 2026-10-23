@@ -6,7 +6,7 @@ A private before/after photo record for renters. Add rooms and spots, capture or
 
 From this directory, run `python3 -m http.server 8080` and open `http://localhost:8080`. There is no build step or runtime dependency. Deploy the directory as a static site, such as GitHub Pages. Camera access needs HTTPS or localhost. ES modules require HTTP serving rather than opening `index.html` as a file.
 
-## Current build: slices 1–2
+## Current build: slices 1–3
 
 - Add, rename, and delete rooms and spots, with in-app deletion confirmation.
 - Capture a move-in photo with the rear camera, or choose an image file.
@@ -18,17 +18,17 @@ Photos stay on this phone only. There are no accounts, uploads, analytics, fonts
 
 Switch to Move-out on Home, open a spot, and line up its 50% ghost over the live camera. Adjust opacity or hide the guide. The gradient correlation meter runs at 8 Hz. A score of at least 70 held for 500 ms turns the frame green, optionally vibrates, and takes one automatic photo. The manual shutter works at any score. Review the pair and keep it or retake; keeping saves the score, capture method, and timestamp. Uploads are marked Manual. Matching compares image structure; it does not detect damage or verify evidence authenticity.
 
-Printable reports and the sample-home loader remain in slices 3 and 4. The three local sample photos are included early for slice 2 fixtures.
+Open Report from Home to see every room and spot, including spots not yet retaken. Before and after captions show each capture date and time; saved pairs include a match score and Auto-matched or Manual. Save as PDF opens the browser print dialog. The A4 print layout keeps one complete pair per page and includes the local-only footer. The sample-home loader remains in slice 4. The three local sample photos are included early for slice 2 fixtures.
 
 ## Files
 
-`js/app.js` handles hash navigation and screens. `js/store.js` owns IndexedDB and the session fallback. `js/camera.js` owns camera lifecycle, canvas capture, and upload decoding. `js/match.js` computes gradient zero-mean normalized cross-correlation at 64×48 and runs the threshold hold. `css/app.css` contains tokens and responsive styles.
+`js/app.js` handles hash navigation and screens. `js/store.js` owns IndexedDB and the session fallback. `js/camera.js` owns camera lifecycle, canvas capture, and upload decoding. `js/match.js` computes gradient zero-mean normalized cross-correlation at 64×48 and runs the threshold hold. `js/report.js` renders the local photo record. `css/app.css` contains tokens and responsive styles; `css/print.css` sets the report print layout.
 
 ## Verification
 
-Syntax: `node --check js/app.js`, `node --check js/store.js`, `node --check js/camera.js`, `node --check js/match.js`, `node --check tests/e2e.mjs`, and `node --check tests/shot.mjs`.
+Syntax: `node --check js/app.js`, `node --check js/store.js`, `node --check js/camera.js`, `node --check js/match.js`, `node --check js/report.js`, `node --check tests/e2e.mjs`, and `node --check tests/shot.mjs`.
 
-With Playwright available, run `PW_ROOT=/path/to/playwright/project node tests/e2e.mjs 1`. The test serves the app with Node HTTP on an automatic port and uses Chromium's fake camera. It checks capture, persistence, upload fallback, and in-app deletion cancellation. `node tests/shot.mjs` saves screenshots of the implemented screens at 390×844 and 1280×800 in `_shots/`. For slice 2, run `bash tests/make-fixtures.sh` (requires ffmpeg), then `PW_ROOT=/path/to/playwright/project node tests/e2e.mjs 2`. The three 640×480, 15 fps, five-second Y4M files are ignored by Git. Same, 10% shifted, and different camera feeds each launch a separate browser. The test prints measured scores and checks auto-capture, a single draft, manual capture, pair retention, and reload persistence. `tests/shot.mjs` also captures ghost, low-match, matched, and pair review screens. These browser tests are supplied for the reviewing agent to run; they have not been executed during this build. Real iPhone Safari and Android Chrome camera behavior still needs a device check.
+With Playwright available, run `PW_ROOT=/path/to/playwright/project node tests/e2e.mjs 1`. The test serves the app with Node HTTP on an automatic port and uses Chromium's fake camera. It checks capture, persistence, upload fallback, and in-app deletion cancellation. `node tests/shot.mjs` saves screenshots of the implemented screens at 390×844 and 1280×800 in `_shots/`. For slice 2, run `bash tests/make-fixtures.sh` (requires ffmpeg), then `PW_ROOT=/path/to/playwright/project node tests/e2e.mjs 2`. The five 640×480, 15 fps, five-second Y4M files are ignored by Git. Same, 3% shifted, 5% shifted, 10% shifted, and different camera feeds each launch a separate browser. The test prints measured scores and checks auto-capture, a single draft, manual capture, pair retention, and reload persistence. `tests/shot.mjs` also captures ghost, low-match, matched, and pair review screens. `PW_ROOT=/path/to/playwright/project node tests/e2e.mjs 3` checks report rendering and saves `_shots/report.pdf`, printing its page count. Report screenshots are also captured at both widths. These browser tests are supplied for the reviewing agent to run; they have not been executed during this build. Real iPhone Safari and Android Chrome camera behavior still needs a device check.
 
 ## Sample assets
 

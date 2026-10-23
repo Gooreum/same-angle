@@ -165,3 +165,24 @@ input[type="range"] { padding: 0; border: 0; accent-color: var(--surface); backg
 .pair-result.auto { color: var(--matched-ink); }
 .saved-after { padding: var(--s3) var(--s4); font-size: var(--text-xs); }
 @media (min-width: 440px) { .pair-photos { grid-template-columns: 1fr 1fr; gap: var(--s3); } }
+
+/* Slice 3: a plain, printable photo record. */
+.report-actions { margin-bottom: var(--s8); }
+.report-actions p { margin-top: var(--s2); text-align: center; }
+.report-heading { border-bottom: 1px solid var(--line); padding-bottom: var(--s6); margin-bottom: var(--s8); }
+.report-heading h1 { margin: var(--s3) 0; }
+.report-period { margin-bottom: var(--s2); font-size: var(--text-sm); }
+.report-room { margin-top: var(--s8); }
+.report-room > h2 { margin-bottom: var(--s4); }
+.report-pair { padding: var(--s4); margin-bottom: var(--s4); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--surface); }
+.report-pair-heading { margin-bottom: var(--s4); }
+.report-room-label { font-size: var(--text-xs); color: var(--muted); margin-bottom: var(--s1); overflow-wrap: anywhere; }
+.report-photos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s3); }
+.report-photos figure { min-width: 0; margin: 0; }
+.report-photos img, .report-missing { width: 100%; aspect-ratio: 4/3; object-fit: contain; background: var(--paper); border-radius: var(--radius-small); }
+.report-missing { display: grid; place-items: center; padding: var(--s2); text-align: center; font-size: var(--text-xs); color: var(--muted); border: 1px dashed var(--line); }
+.report-photos figcaption { margin-top: var(--s2); font-size: var(--text-xs); overflow-wrap: anywhere; }
+.report-photos time { color: inherit; }
+.report-result { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--line); font-size: var(--text-xs); }
+.report-empty { margin-bottom: var(--s6); font-size: var(--text-sm); }
+.report-footer { margin-top: var(--s8); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: var(--text-xs); color: var(--muted); }

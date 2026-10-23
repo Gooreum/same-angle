@@ -1,0 +1,20 @@
+/* Original implementation, MIT. One complete pair per printed page. */
+@page { size: A4 portrait; margin: 16mm; }
+@media print {
+  :root, body { background: white; color: black; }
+  #app { max-width: none; min-height: 0; margin: 0; border: 0; }
+  .appbar, .report-actions, #sheet, #toast { display: none !important; }
+  .report-page { padding: 0; }
+  .report-heading { padding-bottom: 6mm; margin-bottom: 6mm; }
+  .report-heading h1 { font-size: 24pt; }
+  .report-room { margin-top: 0; }
+  .report-room > h2 { break-after: avoid; page-break-after: avoid; }
+  .report-room + .report-room, .report-pair + .report-pair { break-before: page; page-break-before: always; }
+  .report-pair { break-inside: avoid; page-break-inside: avoid; box-shadow: none; border-radius: 0; padding: 4mm 0; margin-bottom: 0; }
+  .report-pair-heading { break-after: avoid; page-break-after: avoid; }
+  .report-photos { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4mm; }
+  .report-photos img, .report-missing { height: 62mm; aspect-ratio: auto; object-fit: contain; background: white; border: 1px solid var(--line); border-radius: 0; }
+  .report-photos figcaption, .report-photos time { font-size: 9pt; color: black; }
+  .report-result, .report-footer, .report-room-label, .report-period { color: black; }
+  .report-footer { font-size: 9pt; break-inside: avoid; page-break-inside: avoid; }
+}
